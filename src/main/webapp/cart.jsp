@@ -41,8 +41,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                                <c:set var="total" value="0" scope="session"/>
-                            
+                            <c:set var="total" value="0" scope="session"/>
+
                             <c:forEach items="${orderlines}" var = "orderline">
                                 <tr id="productNumber${orderline.getProduct().getId()}">
                                     <td class="product-name">
@@ -51,7 +51,7 @@
                                                 <img src="${orderline.getProduct().getImage()}"class="img-fluid" loading="lazy" width="150" height="150">
                                             </a>
                                             <div class="ms-3">
-                                                ${orderline.getProduct().getName()}
+                                                
                                                 <div class="product-details">
                                                     <p>${orderline.getProduct().getBrand()}</p>
                                                     <p>${orderline.getProduct().getPrice()} USD</p>
@@ -86,8 +86,8 @@
                             Impuesto incluido. Los gastos de envío se calculan en la pantalla de pago.
                         </p>
                         <div class="text-center">
-                            <a type="submit" class="btn btn-dark btn-lg w-100" onclick="proccessOrder()">Pagar pedido</a> 
-                          </div>
+                            <a class="btn btn-dark btn-lg w-100" data-bs-toggle="modal" data-bs-target="#paymentMethodsModal">Abrir métodos de pago</a>
+                        </div>
                     </div>
                 </div>
             </c:if>
@@ -111,7 +111,7 @@
                 </c:forEach>
             </div>
         </div>
-       
+
         <%@include file="components/footer.jsp" %>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -119,5 +119,64 @@
         <script src="assets/js/notifications.js"></script>
         <script src="assets/js/cartMethods.js"></script>
         <script src="assets/js/paymentMethods.js"></script>
+
+        <script>
+    function submitForm() {
+      fetch('yapevalidation', {
+        method: 'POST'
+      })
+        .then(response => response.json())
+
+        .then(data => {
+          console.log('Response JSON:', data);
+          if (data.type === 'success') {
+            console.log('Response JSON:', data);
+
+            showToast(data.type, data.tittle);
+            setTimeout(() => {
+              window.location.href = data.message;
+            }, 1000);
+          } else {
+            showToast(data.type, data.tittle);
+          }
+        })
+
+        .catch(error => {
+          showToast('error', 'Error al procesar orden de compra');
+          console.error('Error:', error);
+        });
+    }
+
+
+
+  </script>
     </body>
 </html>
+
+<div class="modal fade" id="paymentMethodsModal" tabindex="-1" aria-labelledby="paymentMethodsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentMethodsLabel">Selecciona tu método de pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <!-- Iconos de Métodos de Pago -->
+                <div class="row">
+                    <div class="col-6">
+                        <a type="submit" onclick="proccessOrder()">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEJBg1uzMXYl0R2WMDCM314vJqXOquuHp8Pw&s" alt="PayPal" class="img-fluid" style="max-width: 150px;">
+                            <p>PayPal</p>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="javascript:void(0);" onclick="submitForm()">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm6pdOp6fVfF9R5ArvkMOsht1f3BsFMvR8fLY78W8DquUT3Fs03UP5QNjPYQ4tBm70eN8" alt="Yape" class="img-fluid" style="max-width: 150px;">
+                            <p>Yape</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

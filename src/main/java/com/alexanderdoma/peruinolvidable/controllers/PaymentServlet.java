@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -41,7 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-@WebServlet(name = "PaymentServlet", urlPatterns = {"/checkout", "/authorize_payment", "/execute_payment", "/review_payment"})
+@WebServlet(name = "PaymentServlet", urlPatterns = {"/checkout", "/authorize_payment", "/execute_payment", "/review_payment", "/yapevalidation", "/redirectformYape"})
 public class PaymentServlet extends HttpServlet {
 
     @Override
@@ -54,6 +56,9 @@ public class PaymentServlet extends HttpServlet {
                 break;
             case "/review_payment":
                 sendReviewPaymentPage(request, response);
+                break;
+            case "/redirectformYape":
+                redirectformYape(request, response);
                 break;
         }
     }
@@ -116,9 +121,14 @@ public class PaymentServlet extends HttpServlet {
             case "/execute_payment":
                 executePayment(request, response);
                 break;
+            case "/yapevalidation":
+                yapevalidation(request, response);
+                break;
+
         }
     }
 
+    //---------------------------------------------------- REDIGIRIR PARA PAGAR CON PAYPAL//----------------------------------------------------
     private void authorizePayment(HttpServletRequest request, HttpServletResponse response) {
         List<Orderline> orderlines = getOrderlines(request);
         if (orderlines == null || getOrderlines(request).size() <= 0) {
@@ -131,13 +141,62 @@ public class PaymentServlet extends HttpServlet {
                 sendResponse(response, "error", "Debe iniciar sesión");
                 return;
             }
+
             String approvalLink = paymentServices.authorizatePayment(getOrderlines(request), getUserObject(request));
+            System.out.println("Link :" + approvalLink);
+
             sendResponse(response, "success", "Pedido generado correctamente", approvalLink);
         } catch (PayPalRESTException | DAOException ex) {
             sendResponse(response, "error", "Error al procesar pago", ex.getMessage());
         }
     }
 
+    private void yapevalidation(HttpServletRequest request, HttpServletResponse response) {
+        List<Orderline> orderlines = getOrderlines(request);
+        if (orderlines == null || getOrderlines(request).size() <= 0) {
+            sendResponse(response, "error", "No hay pedidos en el carrito");
+            return;
+        }
+        try {
+            if (getUserObject(request) == null) {
+                sendResponse(response, "error", "Debe iniciar sesión");
+                return;
+            }
+            sendResponse(response, "success", "Pedido generado correctamente", "redirectformYape");
+        } catch (DAOException ex) {
+            sendResponse(response, "error", "Error al procesar pago", ex.getMessage());
+        }
+    }
+
+    private void redirectformYape(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            HttpSession session = request.getSession();
+            OrderDAO objOrderDAO = new OrderDAO();
+            int user_id = (int) session.getAttribute("user_id");
+            int correlative = objOrderDAO.getcount(user_id);
+            LocalDate fechaActual = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy");
+            LocalDate fechaAnterior = fechaActual.plusDays(1);
+
+            request.setAttribute("currentdate", fechaActual.format(formatter));
+            request.setAttribute("nextdate", fechaAnterior.format(formatter));
+            loadCartShopping(request);
+            request.setAttribute("correlative", "OV01-00" + correlative);
+            request.getRequestDispatcher("yapeform.jsp").forward(request, response);
+        } catch (ServletException | IOException | DAOException ex) {
+            Logger.getLogger(PaymentServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private void loadCartShopping(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        session.setAttribute("orderlines", session.getAttribute("orderlines"));
+
+    }
+
+    //AQUIIIIIIII CREA LA ORDEN  Y DETALLE DE ORDEN
+    //---------------------------------------------------- REDIGIRIR PARA CREAR LA ORDEN //----------------------------------------------------
     private void executePayment(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             HttpSession session = request.getSession();
@@ -155,7 +214,7 @@ public class PaymentServlet extends HttpServlet {
             OrderDAO objOrderDAO = new OrderDAO();
             int user_id = (int) session.getAttribute("user_id");
             int correlative = objOrderDAO.getcount(user_id);
-            
+
             sendmail(request, response, correlative);
             request.getRequestDispatcher("receipt.jsp").forward(request, response);
 
@@ -211,6 +270,7 @@ public class PaymentServlet extends HttpServlet {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(json.toString());
+            System.out.println("JSON :" + json);
         } catch (IOException ex) {
             Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -236,7 +296,7 @@ public class PaymentServlet extends HttpServlet {
         User user = null;
         try {
             user = new UserDAO().getById((int) session.getAttribute("user_id"));
-            String html = createdHtml(request, response, user,correlative);
+            String html = createdHtml(request, response, user, correlative);
             if (convertirHtmlAPdf(html, rutaPDF)) {
                 enviarCorreoConAdjunto(rutaPDF);
             }
@@ -248,7 +308,7 @@ public class PaymentServlet extends HttpServlet {
 
     }
 
-    private static String createdHtml(HttpServletRequest request, HttpServletResponse response, User user,int correlative) {
+    private static String createdHtml(HttpServletRequest request, HttpServletResponse response, User user, int correlative) {
         System.out.println("El mail del usuario logeado es " + user.getEmail());
         if (user.getEmail() != null) {
             mainreceptor = user.getEmail();
@@ -370,7 +430,7 @@ public class PaymentServlet extends HttpServlet {
                 + "</header>"
                 + "<section class=\"invoice-details\">"
                 + "<div class=\"invoice-id\">"
-                + "<p><strong>COD Venta:</strong> OV01-00"+correlative+"</p>"
+                + "<p><strong>COD Venta:</strong> OV01-00" + correlative + "</p>"
                 + "<p><strong>Fecha:</strong>  " + fechaActual + "</p>"
                 + "</div>"
                 + "<div class=\"customer-info\">"
@@ -485,4 +545,5 @@ public class PaymentServlet extends HttpServlet {
             System.out.println("Error al enviar el correo: " + e.getMessage());
         }
     }
+
 }
