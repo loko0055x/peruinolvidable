@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDAO implements IUser{
+public class UserDAO implements IUser {
 
     private final String GETALL = SQLSentencesManager.getProperty("USER.GETALL");
     private final String INSERT = SQLSentencesManager.getProperty("USER.INSERT");
@@ -21,16 +21,17 @@ public class UserDAO implements IUser{
     private final String DELETE = SQLSentencesManager.getProperty("USER.DELETE");
     private final String GETBYID = SQLSentencesManager.getProperty("USER.GETBYID");
     private final String VERIFY = SQLSentencesManager.getProperty("USER.VERIFY");
+    private final String ORDERFORUSER = SQLSentencesManager.getProperty("USER.ORDERFORUSER");
 
     @Override
     public List<User> getAll() throws DAOException {
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
         List<User> objUsersList = new ArrayList<>();
-        try(Connection objConnection = Connector.getInstance().getConnection()) {
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
             objPreparedStatement = objConnection.prepareStatement(GETALL);
             objResultSet = objPreparedStatement.executeQuery();
-            while(objResultSet.next()) {
+            while (objResultSet.next()) {
                 objUsersList.add(getObject(objResultSet));
             }
             return objUsersList;
@@ -38,8 +39,12 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETALL") + ex.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETALL") + ex.getMessage());
             }
@@ -50,9 +55,9 @@ public class UserDAO implements IUser{
     public void add(User o) throws DAOException {
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
-        try (Connection objConnection = Connector.getInstance().getConnection()){
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
             objPreparedStatement = objConnection.prepareStatement(INSERT);
-            int i=1;
+            int i = 1;
             objPreparedStatement.setString(i++, o.getName());
             objPreparedStatement.setString(i++, o.getLastname());
             objPreparedStatement.setString(i++, o.getUsername());
@@ -63,8 +68,12 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.INSERT") + e.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.INSERT") + ex.getMessage());
             }
@@ -75,9 +84,9 @@ public class UserDAO implements IUser{
     public User update(User o) throws DAOException {
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
-        try(Connection objConnection = Connector.getInstance().getConnection()){
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
             objPreparedStatement = objConnection.prepareCall(UPDATE);
-            int i=1;
+            int i = 1;
             objPreparedStatement.setString(i++, o.getName());
             objPreparedStatement.setString(i++, o.getLastname());
             objPreparedStatement.setString(i++, o.getUsername());
@@ -95,8 +104,12 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.UPDATE") + e.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.UPDATE") + ex.getMessage());
             }
@@ -107,7 +120,7 @@ public class UserDAO implements IUser{
     public void delete(int id) throws DAOException {
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
-        try(Connection objConnection = Connector.getInstance().getConnection()) {
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
             objPreparedStatement = objConnection.prepareCall(DELETE);
             objPreparedStatement.setInt(1, id);
             objPreparedStatement.executeUpdate();
@@ -115,8 +128,12 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.DELETE") + e.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.DELETE") + ex.getMessage());
             }
@@ -128,7 +145,7 @@ public class UserDAO implements IUser{
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
         User objUser = null;
-        try(Connection objConnection = Connector.getInstance().getConnection()) {
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
             objPreparedStatement = objConnection.prepareCall(GETBYID);
             objPreparedStatement.setInt(1, id);
             objResultSet = objPreparedStatement.executeQuery();
@@ -140,28 +157,30 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETBYID") + e.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETBYID") + ex.getMessage());
             }
         }
     }
 
-    
-
     @Override
     public User login(String username, String password) throws DAOException {
         PreparedStatement objPreparedStatement = null;
         ResultSet objResultSet = null;
         User objUser = null;
-        try (Connection objConnection = Connector.getInstance().getConnection();){
+        try ( Connection objConnection = Connector.getInstance().getConnection();) {
             objPreparedStatement = objConnection.prepareStatement(VERIFY);
             int i = 1;
             objPreparedStatement.setString(i++, username);
             objPreparedStatement.setString(i++, password);
             objResultSet = objPreparedStatement.executeQuery();
-            while (objResultSet.next()){
+            while (objResultSet.next()) {
                 objUser = getObject(objResultSet);
             }
             return objUser;
@@ -169,14 +188,18 @@ public class UserDAO implements IUser{
             throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.VERIFY") + " " + ex.getMessage());
         } finally {
             try {
-                if(objResultSet != null) objResultSet.close();
-                if(objPreparedStatement != null) objPreparedStatement.close();
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
             } catch (SQLException ex) {
                 throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.VERIFY") + " " + ex.getMessage());
             }
         }
     }
-    
+
     @Override
     public User getObject(ResultSet rs) throws DAOException {
         try {
@@ -196,6 +219,35 @@ public class UserDAO implements IUser{
             );
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
+        }
+    }
+
+    @Override
+    public User getUserforOrder(int ordenid) throws DAOException {
+        PreparedStatement objPreparedStatement = null;
+        ResultSet objResultSet = null;
+        User objUser = null;
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
+            objPreparedStatement = objConnection.prepareCall(ORDERFORUSER);
+            objPreparedStatement.setInt(1, ordenid);
+            objResultSet = objPreparedStatement.executeQuery();
+            while (objResultSet.next()) {
+                objUser = new User(objResultSet.getString("user_name"), objResultSet.getString("user_lastname"), objResultSet.getString("user_email"));
+            }
+            return objUser;
+        } catch (SQLException e) {
+            throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETBYID") + e.getMessage());
+        } finally {
+            try {
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objPreparedStatement != null) {
+                    objPreparedStatement.close();
+                }
+            } catch (SQLException ex) {
+                throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETBYID") + ex.getMessage());
+            }
         }
     }
 }

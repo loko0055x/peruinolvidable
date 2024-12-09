@@ -176,15 +176,20 @@
             <!-- Product List -->
             <div class="product-list">
                 <%
+
                     List<Orderline> obj = (List<Orderline>) session.getAttribute("orderlines");
+                    if (session.getAttribute("orderlines") == null || obj.size() == 0) {
+                        request.getRequestDispatcher("index.jsp").forward(request, response);
+
+                    }
                     for (int i = 0; i < obj.size(); i++) {
                 %>
                 <div class="product-item">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZU1LBMR_H8jkyb3sHa3O88F5LJqQnkhnorQ&s" alt="Producto">
+                    <img src="<%=obj.get(i).getProduct().getImage()%>" alt="Producto">
                     <div class="product-info">
                         <h5><strong> <%=obj.get(i).getProduct().getName()%></strong></h5>
-                        <p><i class="fas fa-cogs icon"></i> Unidad: 1</p>
-                        <p><i class="fas fa-tag icon"></i> S/ 705.00</p>
+                        <p><i class="fas fa-cogs icon"></i> Unidad:  <%=obj.get(i).getQuantity()%></p>
+                        <p><i class="fas fa-tag icon"></i> $.  <%=obj.get(i).getTotal()%></p>
                     </div>
                 </div>
                 <%
@@ -196,25 +201,121 @@
 
             <!-- Total Section -->
             <div class="total">
-                <p><strong>Total a Pagar: S/ 705.00</strong></p>
+                <p><strong>Total a Pagar: $. ${total}</strong></p>
             </div>
 
             <!-- Payment Section -->
-            <div class="payment-section">
-                <h3>Detalle de Pago</h3>
-                <div class="payment-method">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm6pdOp6fVfF9R5ArvkMOsht1f3BsFMvR8fLY78W8DquUT3Fs03UP5QNjPYQ4tBm70eN8" alt="Yape">
-                    <p><strong>Yape</strong> - Paga mediante código QR.</p>
-                </div>
-                <p><i class="fas fa-info-circle icon"></i> Adjunta el comprobante con el justificante de pedido para confirmación.</p>
-                <!-- Aquí agregamos el campo para seleccionar la imagen -->
-                <div class="mb-3">
-                    <label for="fileUpload" class="form-label">Selecciona una imagen para adjuntar:</label>
-                    <input type="file" class="form-control" id="fileUpload" accept="image/*">
-                </div>    </div>
+            <form action="createorderYape" method="POST" accept-charset="UTF-8" enctype="multipart/form-data" onsubmit="return validateFile()">
+                <div class="payment-section">
+                    <h3>Detalle de Pago</h3>
+                    <div class="payment-method">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm6pdOp6fVfF9R5ArvkMOsht1f3BsFMvR8fLY78W8DquUT3Fs03UP5QNjPYQ4tBm70eN8" alt="Yape">
+                        <p><strong>Yape</strong> - Paga mediante código QR.</p>
+                    </div>
 
-            <!-- Pay Button -->
-            <button class="pay-button" onclick="alert('Pedido realizado con éxito!')">Realizar Pedido</button>
+                    <p><i class="fas fa-info-circle icon"></i> Adjunta el comprobante con el justificante de pedido para confirmación.</p>
+                    <!-- Campo para seleccionar la imagen -->
+                    <div class="mb-3">
+                        <label for="fileUpload" class="form-label">Selecciona una imagen para adjuntar:</label>
+                        <input type="file" class="form-control" name="fileUpload" id="fileUpload" accept="image/*" onchange="previewImage()">
+
+                        <button type="button" id="previewButton" class="btn btn-outline-secondary" onclick="togglePreview()"> 
+                            <i class="fas fa-eye"></i> Ver imagen
+                        </button>
+                        <div id="imagePreviewContainer" style="display:none; margin-top: 20px;">
+                            <iframe id="imagePreviewIframe" style="width:100%; height:300px; display:none;" frameborder="0"></iframe>
+                            <img id="imagePreview" style="width:100%; height:auto; display:none;" />
+                        </div>
+
+                        <script>
+                            // Mostrar el botón solo cuando se haya seleccionado un archivo válido
+                            function preparePreview() {
+                                const fileInput = document.getElementById('fileUpload');
+                                const file = fileInput.files[0];
+                                const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+
+                                const previewButton = document.getElementById('previewButton');
+                                const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+                                const iframePreview = document.getElementById('imagePreviewIframe');
+                                const imagePreview = document.getElementById('imagePreview');
+
+                                // Verifica que el archivo sea una imagen válida
+                                if (file && allowedExtensions.test(file.name)) {
+                                    previewButton.style.display = "inline-block"; // Mostrar el botón de vista previa
+                                    const fileURL = URL.createObjectURL(file);
+                                    imagePreview.src = fileURL; // Configura la fuente de la imagen
+
+                                    // Ocultar imagen y iframe inicialmente
+                                    imagePreview.style.display = "none";
+                                    iframePreview.style.display = "none";
+                                    imagePreviewContainer.style.display = "none";
+                                } else {
+                                    previewButton.style.display = "none"; // Ocultar el botón si no es una imagen válida
+                                }
+                            }
+
+                            // Alternar la vista previa entre iframe y imagen
+                            function togglePreview() {
+                                const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+                                const iframePreview = document.getElementById('imagePreviewIframe');
+                                const imagePreview = document.getElementById('imagePreview');
+                                const fileInput = document.getElementById('fileUpload');
+                                const file = fileInput.files[0];
+
+                                // Verifica que se haya seleccionado un archivo válido
+                                if (file) {
+                                    const fileURL = URL.createObjectURL(file);
+
+                                    if (iframePreview.style.display === "none") {
+                                        iframePreview.style.display = "block";
+                                        imagePreview.style.display = "none";
+                                        iframePreview.src = fileURL; // Mostrar el iframe con el archivo
+                                    } else {
+                                        iframePreview.style.display = "none";
+                                        imagePreview.style.display = "block";
+                                        imagePreview.src = fileURL; // Mostrar la imagen en lugar del iframe
+                                    }
+
+                                    imagePreviewContainer.style.display = "block"; // Mostrar el contenedor
+                                }
+                            }
+
+                            // Llama a la función para preparar la vista previa cuando se selecciona el archivo
+                            document.getElementById('fileUpload').addEventListener('change', preparePreview);
+                        </script>
+                        <small id="fileError" class="text-danger" style="display:none;">Por favor selecciona un archivo válido (.jpeg, .png, .jpg).</small>
+                    </div>
+                </div>
+
+                <!-- Botón para enviar -->
+                <button type="submit" class="pay-button">Realizar Pedido</button>
+            </form>
+
+            <script>
+                function validateFile() {
+                    const fileInput = document.getElementById('fileUpload');
+                    const fileError = document.getElementById('fileError');
+                    const file = fileInput.files[0]; // Obtiene el archivo seleccionado
+                    const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i; // Extensiones permitidas
+
+                    if (!file) {
+                        // Si no se selecciona ningún archivo
+                        fileError.textContent = "Por favor selecciona un archivo.";
+                        fileError.style.display = "block";
+                        return false;
+                    }
+
+                    if (!allowedExtensions.test(file.name)) {
+                        // Si el archivo no tiene una extensión válida
+                        fileError.textContent = "Por favor selecciona un archivo válido (.jpeg, .png, .jpg).";
+                        fileError.style.display = "block";
+                        return false;
+                    }
+
+                    fileError.style.display = "none"; // Oculta el mensaje de error si todo está bien
+                    return true; // Permite enviar el formulario
+                }
+            </script>
         </div>
 
         <!-- Bootstrap JS -->

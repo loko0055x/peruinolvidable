@@ -1,3 +1,4 @@
+<%@page import="com.alexanderdoma.peruinolvidable.model.entity.Orderline"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -22,6 +23,12 @@
     </head>
     <body>
         <%@include file="components/header.jsp" %>
+        <%
+            List<Orderline> obj = (List<Orderline>) session.getAttribute("orderlines");
+            if (session.getAttribute("orderlines") == null || obj.size() == 0) {
+                request.getRequestDispatcher("index.jsp").forward(request, response);
+            }
+        %>
         <div class="container"> 
             <h1>Porfavor, revisar antes de pagar</h1>
             <hr class="my-3">
@@ -35,7 +42,7 @@
                         <li class="list-group-item d-flex justify-content-between lh-sm">
                             <div>
                                 <h6 class="my-0">Descripción</h6>
-                                    <small class="text-muted">${transaction.description}</small>
+                                <small class="text-muted">${transaction.description}</small>
                             </div>
                         </li>
                         <li class="list-group-item d-flex justify-content-between lh-sm">

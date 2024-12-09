@@ -12,7 +12,8 @@ public class Order {
     private String payment_id;
     private Timestamp created_at;
     private User user;
-
+    private String paymentType;
+    private String photo;
     public Order() {
     }
 
@@ -25,6 +26,19 @@ public class Order {
         this.payment_id = payment_id;
         this.created_at = created_at;
         this.user = user;
+    }
+
+    public Order(Integer id, Date date, double subtotal, double total, String status, String payment_id, Timestamp created_at, User user, String paymentType, String photo) {
+        this.id = id;
+        this.date = date;
+        this.subtotal = subtotal;
+        this.total = total;
+        this.status = status;
+        this.payment_id = payment_id;
+        this.created_at = created_at;
+        this.user = user;
+        this.paymentType = paymentType;
+        this.photo = photo;
     }
 
     public Integer getId() {
@@ -94,5 +108,21 @@ public class Order {
     @Override
     public String toString() {
         return "Order{" + "id=" + id + ", date=" + date + ", subtotal=" + subtotal + ", total=" + total + ", status=" + status + ", payment_id=" + payment_id + ", created_at=" + created_at + ", user=" + user + '}';
+    }
+
+    public String getPaymentType() {
+        return paymentType;
+    }
+
+    public void setPaymentType(String paymentType) {
+        this.paymentType = paymentType;
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 }

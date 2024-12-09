@@ -201,8 +201,9 @@ function deleteCategory(category_id){
         });
 }
 
-function updateOrder(order_state, order_id){
-    fetch(`/peruinolvidable/admin/sale?sale_state=${order_state}&sale_id=${order_id}`,{
+
+function updateOrder(order_state, order_id,titulo,mensajes){
+      fetch(`/peruinolvidable/admin/sale?sale_state=${order_state}&sale_id=${order_id}&titulo=${titulo}&mensajes=${mensajes}`, {
             method: 'PUT'
         })
         .then(response => response.json())

@@ -35,6 +35,13 @@ public class User {
         this.created_at = created_at;
     }
 
+    public User(String name, String lastname, String email) {
+        this.name = name;
+        this.lastname = lastname;
+        this.email = email;
+    }
+
+    
     public Integer getId() {
         return id;
     }

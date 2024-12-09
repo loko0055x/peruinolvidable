@@ -51,7 +51,7 @@
                                                 <img src="${orderline.getProduct().getImage()}"class="img-fluid" loading="lazy" width="150" height="150">
                                             </a>
                                             <div class="ms-3">
-                                                
+                                                ${orderline.getProduct().getName()}
                                                 <div class="product-details">
                                                     <p>${orderline.getProduct().getBrand()}</p>
                                                     <p>${orderline.getProduct().getPrice()} USD</p>

@@ -19,6 +19,7 @@ import java.util.List;
 public class OrderDAO implements IOrder {
 
     private final String GETALL = SQLSentencesManager.getProperty("ORDER.GETALL");
+    private final String FILTROPEDIDOSX = SQLSentencesManager.getProperty("ORDER.FILTROPEDIDOS");
     private final String INSERT = SQLSentencesManager.getProperty("ORDER.INSERT");
     private final String GET_BY_USER = SQLSentencesManager.getProperty("ORDER.GETBYUSER");
     private final String GET_BY_ID = SQLSentencesManager.getProperty("ORDER.GETBYID");
@@ -37,6 +38,9 @@ public class OrderDAO implements IOrder {
             objPreparedStatement.setDouble(i++, objOrder.getTotal());
             objPreparedStatement.setString(i++, objOrder.getPayment_id());
             objPreparedStatement.setInt(i++, objOrder.getUser().getId());
+
+            objPreparedStatement.setString(i++, objOrder.getPaymentType());
+            objPreparedStatement.setString(i++, objOrder.getPhoto());
             objPreparedStatement.executeUpdate();
             objResultSet = objPreparedStatement.getGeneratedKeys();
             if (objResultSet.next()) {
@@ -195,7 +199,8 @@ public class OrderDAO implements IOrder {
                     rs.getString("order_status"),
                     rs.getString("order_payment_id"),
                     rs.getTimestamp("order_created_at"),
-                    objUser
+                    objUser,
+                    rs.getString("order_payment_type"), rs.getString("order_photo_yape")
             );
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
@@ -233,5 +238,40 @@ public class OrderDAO implements IOrder {
             }
         }
 
+    }
+
+    @Override
+    public List<Order> getallorderparameter(String fechainicio, String fechafin, String paymentType) throws DAOException {
+        CallableStatement objCallableStatement = null;
+        ResultSet objResultSet = null;
+        List<Order> objOrdersList = new ArrayList<>();
+        try ( Connection objConnection = Connector.getInstance().getConnection()) {
+            objCallableStatement = objConnection.prepareCall(FILTROPEDIDOSX);
+            objCallableStatement.setString(1, fechainicio);
+            objCallableStatement.setString(2, fechafin);
+            objCallableStatement.setString(3, paymentType);
+            
+ objCallableStatement.execute();
+             
+            objResultSet = objCallableStatement.getResultSet();
+            while (objResultSet.next()) {
+                objOrdersList.add(getObject(objResultSet));
+             }
+             objConnection.close();
+            return objOrdersList;
+        } catch (SQLException ex) {
+            throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETALL") + ex.getMessage());
+        } finally {
+            try {
+                if (objResultSet != null) {
+                    objResultSet.close();
+                }
+                if (objCallableStatement != null) {
+                    objCallableStatement.close();
+                }
+            } catch (SQLException ex) {
+                throw new DAOException(MessagesManager.getProperty("DATABASE.ERROR.GETALL") + ex.getMessage());
+            }
+        }
     }
 }

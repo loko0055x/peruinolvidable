@@ -128,7 +128,7 @@
                                 <div class="product-description">
                                     <div class="product-title">${pro.name}</div>
                                     <div class="product-price">$.  ${pro.price}</div>
-                                    <a class="btn btn-dark" href="product?id=${pro.category.id}">Ver Producto</a> <!-- Botón agregado -->
+                                    <a class="btn btn-dark" href="product?id=${pro.id}">Ver Producto</a> <!-- Botón agregado -->
                                 </div>
                             </div>
                         </c:if>

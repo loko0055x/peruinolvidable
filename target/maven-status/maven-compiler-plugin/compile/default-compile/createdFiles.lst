@@ -4,6 +4,7 @@ com\alexanderdoma\peruinolvidable\utilies\DatabaseKeysManager.class
 com\alexanderdoma\peruinolvidable\model\IUser.class
 com\alexanderdoma\peruinolvidable\model\mysql\OrderlineDAO.class
 com\alexanderdoma\peruinolvidable\model\entity\Product.class
+com\alexanderdoma\peruinolvidable\controllers\OrderController$1.class
 com\alexanderdoma\peruinolvidable\model\IOrder.class
 com\alexanderdoma\peruinolvidable\model\mysql\CategoryDAO.class
 com\alexanderdoma\peruinolvidable\services\PaymentService.class
@@ -15,6 +16,7 @@ com\alexanderdoma\peruinolvidable\model\ICategory.class
 com\alexanderdoma\peruinolvidable\model\IGeneric.class
 com\alexanderdoma\peruinolvidable\model\IOrderline.class
 com\alexanderdoma\peruinolvidable\controllers\OrderController.class
+com\alexanderdoma\peruinolvidable\controllers\PaymentServlet$1.class
 com\alexanderdoma\peruinolvidable\config\Connector.class
 com\alexanderdoma\peruinolvidable\controllers\UserController.class
 com\alexanderdoma\peruinolvidable\model\mysql\UserDAO.class

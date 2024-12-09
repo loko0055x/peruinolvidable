@@ -37,13 +37,17 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
-@WebServlet(name = "PaymentServlet", urlPatterns = {"/checkout", "/authorize_payment", "/execute_payment", "/review_payment", "/yapevalidation", "/redirectformYape"})
+@WebServlet(name = "PaymentServlet", urlPatterns = {"/checkout", "/authorize_payment", "/execute_payment", "/review_payment", "/yapevalidation", "/redirectformYape", "/createorderYape"})
+@MultipartConfig
+
 public class PaymentServlet extends HttpServlet {
 
     @Override
@@ -60,6 +64,7 @@ public class PaymentServlet extends HttpServlet {
             case "/redirectformYape":
                 redirectformYape(request, response);
                 break;
+
         }
     }
 
@@ -124,6 +129,12 @@ public class PaymentServlet extends HttpServlet {
             case "/yapevalidation":
                 yapevalidation(request, response);
                 break;
+            case "/createorderYape": {
+                createorderYape(request, response);
+
+            }
+
+            break;
 
         }
     }
@@ -180,8 +191,8 @@ public class PaymentServlet extends HttpServlet {
 
             request.setAttribute("currentdate", fechaActual.format(formatter));
             request.setAttribute("nextdate", fechaAnterior.format(formatter));
-            loadCartShopping(request);
-            request.setAttribute("correlative", "OV01-00" + correlative);
+            // loadCartShopping(request);
+            request.setAttribute("correlative", "OV01-00" + (correlative+1));
             request.getRequestDispatcher("yapeform.jsp").forward(request, response);
         } catch (ServletException | IOException | DAOException ex) {
             Logger.getLogger(PaymentServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -189,10 +200,48 @@ public class PaymentServlet extends HttpServlet {
 
     }
 
-    private void loadCartShopping(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        session.setAttribute("orderlines", session.getAttribute("orderlines"));
+    private String addstoreImage(HttpServletRequest request) {
 
+        try {
+            String rutaBD = "assets/img/storeYape/";
+
+            String archivo = request.getServletContext().getRealPath("/"
+                    + rutaBD);
+
+            Part filePart = request.getPart("fileUpload");  // Obtener el archivo
+            String fileName = filePart.getSubmittedFileName();  // Nombre del archivo
+
+            System.out.println("" + fileName);
+            System.out.println("La ruta seria :        " + archivo + fileName);
+            filePart.write(archivo + fileName);  // Guardar el archivo
+            return rutaBD + fileName;
+        } catch (IOException | ServletException e) {
+            System.out.println("Error " + e.getMessage());
+            return "";
+        }
+
+    }
+
+    private void createorderYape(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            HttpSession session = request.getSession();
+            OrderDAO objOrderDAO = new OrderDAO();
+            int user_id = (int) session.getAttribute("user_id");
+            int correlative = objOrderDAO.getcount(user_id);
+            sendmail(request, response, correlative);
+            createOrder(request, "YAPE");
+
+            session.removeAttribute("orderlines");
+
+            request.setAttribute("maincolor", "#8e24aa");
+            request.setAttribute("secondarycolor", "#c2185b");
+            request.setAttribute("photo", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm6pdOp6fVfF9R5ArvkMOsht1f3BsFMvR8fLY78W8DquUT3Fs03UP5QNjPYQ4tBm70eN8");
+            request.setAttribute("paymentType", "Yape");
+            request.getRequestDispatcher("transaction-success.jsp").forward(request, response);
+
+        } catch (DAOException | ServletException | IOException ex) {
+            Logger.getLogger(PaymentServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     //AQUIIIIIIII CREA LA ORDEN  Y DETALLE DE ORDEN
@@ -200,7 +249,6 @@ public class PaymentServlet extends HttpServlet {
     private void executePayment(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             HttpSession session = request.getSession();
-
             String paymentId = request.getParameter("paymentId");
             String payerId = request.getParameter("PayerID");
             PaymentService paymentServices = new PaymentService();
@@ -209,21 +257,26 @@ public class PaymentServlet extends HttpServlet {
             Transaction transaction = payment.getTransactions().get(0);
             request.setAttribute("payer", payerInfo);
             request.setAttribute("transaction", transaction);
-            createOrder(request);
+            createOrder(request, "PAYPAL");
 
             OrderDAO objOrderDAO = new OrderDAO();
             int user_id = (int) session.getAttribute("user_id");
             int correlative = objOrderDAO.getcount(user_id);
 
             sendmail(request, response, correlative);
-            request.getRequestDispatcher("receipt.jsp").forward(request, response);
+            session.removeAttribute("orderlines");
 
+            request.setAttribute("maincolor", "#012168");
+            request.setAttribute("secondarycolor", "#009adc");
+            request.setAttribute("photo", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEJBg1uzMXYl0R2WMDCM314vJqXOquuHp8Pw&s");
+            request.setAttribute("paymentType", "Paypal");
+            request.getRequestDispatcher("transaction-success.jsp").forward(request, response);
         } catch (DAOException | PayPalRESTException ex) {
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 
-    private void createOrder(HttpServletRequest request) throws DAOException {
+    private void createOrder(HttpServletRequest request, String paymentType) throws DAOException {
         OrderDAO objOrderDAO = new OrderDAO();
         HttpSession session = request.getSession();
         List<Orderline> orderlines = (List<Orderline>) session.getAttribute("orderlines");
@@ -234,7 +287,12 @@ public class PaymentServlet extends HttpServlet {
         objOrder.setTotal((double) session.getAttribute("total"));
         objOrder.setDate(Date.valueOf(LocalDate.now()));
         objOrder.setStatus("PENDING");
-        objOrder.setPayment_id(request.getParameter("paymentId"));
+        objOrder.setPaymentType(paymentType);
+        if (paymentType.equals("PAYPAL")) {
+            objOrder.setPayment_id(request.getParameter("paymentId"));
+        } else {
+            objOrder.setPhoto(addstoreImage(request));
+        }
         objOrderDAO.add(objOrder, orderlines);
     }
 
